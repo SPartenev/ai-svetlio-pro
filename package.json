@@ -1,0 +1,46 @@
+{
+  "name": "svet-ai",
+  "version": "1.0.0",
+  "description": "Universal AI Agent Toolkit & Project Memory - Инструменти, памет и режими за AI-assisted разработка",
+  "main": "dist/cli.js",
+  "bin": {
+    "svet": "dist/cli.js",
+    "svet-ai": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "cursor",
+    "claude",
+    "antigravity",
+    "mcp",
+    "toolkit",
+    "memory",
+    "project-management"
+  ],
+  "author": "Svet_AI",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12",
+    "yaml": "^2.3.4",
+    "glob": "^10.3.10",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/inquirer": "^9.0.7",
+    "@types/fs-extra": "^11.0.4",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
