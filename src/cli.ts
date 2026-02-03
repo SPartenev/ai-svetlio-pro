@@ -26,7 +26,7 @@ import { Modes } from './modes';
 import { Tools } from './tools';
 import { MCPWizard } from './mcp-wizard';
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 // ============================================================================
 // BANNER
@@ -225,17 +225,71 @@ program
   });
 
 // ----------------------------------------------------------------------------
-// svet tools - Покажи налични инструменти
+// svet tools - Управление на инструменти
 // ----------------------------------------------------------------------------
-program
+const toolsCommand = program
   .command('tools')
-  .description('Покажи налични инструменти')
+  .description('Управление на инструменти (MCP сървъри, агенти, skills)');
+
+// svet tools (без подкоманда) - показва каталога
+toolsCommand
+  .action(async () => {
+    showBanner();
+    const tools = new Tools();
+    await tools.list();
+  });
+
+// svet tools list
+toolsCommand
+  .command('list')
+  .description('Покажи каталога с налични инструменти')
   .option('--category <cat>', 'Филтрирай по категория')
   .action(async (options) => {
     showBanner();
-    
     const tools = new Tools();
     await tools.list(options.category);
+  });
+
+// svet tools add <id>
+toolsCommand
+  .command('add <toolId>')
+  .description('Добави инструмент към проекта')
+  .action(async (toolId) => {
+    showBanner();
+    const tools = new Tools();
+    await tools.add(toolId);
+  });
+
+// svet tools remove <id>
+toolsCommand
+  .command('remove <toolId>')
+  .description('Премахни инструмент от проекта')
+  .action(async (toolId) => {
+    showBanner();
+    const tools = new Tools();
+    await tools.remove(toolId);
+  });
+
+// svet tools info <id>
+toolsCommand
+  .command('info <toolId>')
+  .description('Покажи детайли за инструмент')
+  .action(async (toolId) => {
+    showBanner();
+    const tools = new Tools();
+    await tools.info(toolId);
+  });
+
+// ----------------------------------------------------------------------------
+// svet registry - Търсене в MCP Registry
+// ----------------------------------------------------------------------------
+program
+  .command('registry <query>')
+  .description('Търси в официалния MCP Registry (16,000+ сървъра)')
+  .action(async (query) => {
+    showBanner();
+    const tools = new Tools();
+    await tools.searchRegistry(query);
   });
 
 // ----------------------------------------------------------------------------
@@ -286,10 +340,12 @@ program
         { name: '🔧 Режим ремонт (repair)', value: 'repair' },
         { name: '🔬 Дълбок анализ (analyze)', value: 'analyze' },
         { name: '📊 Покажи статус (status)', value: 'status' },
-        { name: '🛠️  Покажи инструменти (tools)', value: 'tools' },
+        new inquirer.Separator('─── Инструменти ───'),
+        { name: '🛠️  Каталог инструменти (tools)', value: 'tools' },
+        { name: '🔍 Търси в MCP Registry (registry)', value: 'registry-search' },
         { name: '🏭 MCP Wizard (mcp-wizard)', value: 'mcp-wizard' },
-        { name: '⚙️  Глобална настройка (setup)', value: 'setup' },
         new inquirer.Separator(),
+        { name: '⚙️  Глобална настройка (setup)', value: 'setup' },
         { name: '❌ Изход', value: 'exit' }
       ]
     }]);
@@ -298,7 +354,20 @@ program
       console.log(chalk.gray('Довиждане! 👋'));
       return;
     }
-    
+
+    // Специален случай за registry search
+    if (action === 'registry-search') {
+      const { query } = await inquirer.prompt([{
+        type: 'input',
+        name: 'query',
+        message: 'Търси в MCP Registry:',
+        default: 'database'
+      }]);
+      const tools = new Tools();
+      await tools.searchRegistry(query);
+      return;
+    }
+
     // Изпълни избраната команда
     await program.parseAsync(['node', 'svet', action]);
   });
