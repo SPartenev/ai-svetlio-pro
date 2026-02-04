@@ -26,7 +26,7 @@ import { Modes } from './modes';
 import { Tools } from './tools';
 import { MCPWizard } from './mcp-wizard';
 
-const VERSION = '1.3.0';
+const VERSION = '1.3.2';
 
 // ============================================================================
 // BANNER

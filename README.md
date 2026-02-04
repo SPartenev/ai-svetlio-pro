@@ -8,7 +8,7 @@
   ███████║ ╚████╔╝ ███████╗   ██║   ███████╗██║╚██████╔╝
   ╚══════╝  ╚═══╝  ╚══════╝   ╚═╝   ╚══════╝╚═╝ ╚═════╝
 
-  Universal AI Agent Toolkit & Project Memory v1.3.0
+  Universal AI Agent Toolkit & Project Memory v1.3.2
 ```
 
 **AI_Svetlio** е система за управление на AI-assisted разработка, която решава ключови проблеми:
@@ -30,7 +30,7 @@ npm install -g ai-svetlio
 ### Версии
 ```bash
 npm install -g ai-svetlio@latest    # Последна версия (препоръчително)
-npm install -g ai-svetlio@1.3.0     # Конкретна версия
+npm install -g ai-svetlio@1.3.2     # Конкретна версия
 ```
 
 ### Обновяване
