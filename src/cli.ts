@@ -25,8 +25,9 @@ import { Memory } from './memory';
 import { Modes } from './modes';
 import { Tools } from './tools';
 import { MCPWizard } from './mcp-wizard';
+import { WebViewer } from './web';
 
-const VERSION = '1.3.3';
+const VERSION = '1.4.0';
 
 // ============================================================================
 // BANNER
@@ -146,7 +147,10 @@ program
     
     // Създай IDE rules
     await createProjectRules(process.cwd());
-    
+
+    // Създай launcher файл за "един клик" отваряне
+    const launcherFile = await WebViewer.createLauncher(process.cwd());
+
     console.log(chalk.green('\n✅ Проектът е инициализиран!'));
     console.log(chalk.gray('\nСъздадени файлове:'));
     console.log(chalk.gray('  .memory/STATE.md'));
@@ -159,6 +163,9 @@ program
     console.log(chalk.gray('  .memory/MODE.md'));
     console.log(chalk.gray('  .cursorrules'));
     console.log(chalk.gray('  CLAUDE.md'));
+    console.log(chalk.gray(`  ${launcherFile}`));
+    console.log(chalk.gray('\n💡 Кликни два пъти на ' + launcherFile + ' за да отвориш Web Viewer.'));
+    console.log(chalk.gray('   Или използвай: svetlio web'));
   });
 
 // ----------------------------------------------------------------------------
@@ -306,6 +313,79 @@ program
   });
 
 // ----------------------------------------------------------------------------
+// svetlio web - Web преглед на .memory/
+// ----------------------------------------------------------------------------
+program
+  .command('web')
+  .alias('уеб')
+  .description('Отвори визуален преглед на .memory/ в браузъра (read-only)')
+  .option('--port <port>', 'Порт за HTTP сървъра', '3847')
+  .option('--host <host>', 'Host адрес (0.0.0.0 за мрежов достъп)', 'localhost')
+  .action(async (options) => {
+    showBanner();
+
+    const memory = new Memory(process.cwd());
+    if (!await memory.exists()) {
+      console.log(chalk.red('❌ Този проект не е инициализиран.'));
+      console.log(chalk.gray('   Използвай: svetlio init'));
+      return;
+    }
+
+    const port = parseInt(options.port, 10);
+    const host = options.host;
+    const viewer = new WebViewer(process.cwd());
+
+    try {
+      await viewer.start(port, host);
+      const url = `http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`;
+      console.log(chalk.green(`\n🌐 AI_Svetlio Web Viewer`));
+      console.log(chalk.cyan(`   ${url}\n`));
+      if (host === '0.0.0.0') {
+        console.log(chalk.yellow('   ⚠️  Достъпен от мрежата (read-only)'));
+        console.log(chalk.gray('   Колегите могат да отворят: http://<твоето-IP>:' + port));
+      }
+      console.log(chalk.gray('   Auto-refresh: 5 секунди'));
+      console.log(chalk.gray('   Натисни Ctrl+C за спиране\n'));
+      viewer.openBrowser(url);
+
+      // Wait for Ctrl+C
+      process.on('SIGINT', () => {
+        console.log(chalk.yellow('\n\n👋 Сървърът е спрян.'));
+        viewer.stop();
+        process.exit(0);
+      });
+    } catch (err: any) {
+      console.log(chalk.red(`❌ ${err.message}`));
+    }
+  });
+
+// ----------------------------------------------------------------------------
+// svetlio shortcut - Създай desktop shortcut
+// ----------------------------------------------------------------------------
+program
+  .command('shortcut')
+  .description('Създай desktop shortcut за бързо отваряне на Web Viewer')
+  .action(async () => {
+    showBanner();
+
+    const memory = new Memory(process.cwd());
+    if (!await memory.exists()) {
+      console.log(chalk.red('❌ Този проект не е инициализиран.'));
+      console.log(chalk.gray('   Използвай: svetlio init'));
+      return;
+    }
+
+    try {
+      const shortcutPath = await WebViewer.createDesktopShortcut(process.cwd());
+      console.log(chalk.green(`\n✅ Desktop shortcut е създаден!`));
+      console.log(chalk.cyan(`   ${shortcutPath}`));
+      console.log(chalk.gray('\n   Кликни два пъти за да отвориш Web Viewer.'));
+    } catch (err: any) {
+      console.log(chalk.red(`❌ Грешка: ${err.message}`));
+    }
+  });
+
+// ----------------------------------------------------------------------------
 // svetlio log - Добави запис в лога
 // ----------------------------------------------------------------------------
 program
@@ -340,12 +420,14 @@ program
         { name: '🔧 Режим ремонт (repair)', value: 'repair' },
         { name: '🔬 Дълбок анализ (analyze)', value: 'analyze' },
         { name: '📊 Покажи статус (status)', value: 'status' },
+        { name: '🌐 Web Viewer (web)', value: 'web' },
         new inquirer.Separator('─── Инструменти ───'),
         { name: '🛠️  Каталог инструменти (tools)', value: 'tools' },
         { name: '🔍 Търси в MCP Registry (registry)', value: 'registry-search' },
         { name: '🏭 MCP Wizard (mcp-wizard)', value: 'mcp-wizard' },
         new inquirer.Separator(),
         { name: '⚙️  Глобална настройка (setup)', value: 'setup' },
+        { name: '🖥️  Desktop shortcut (shortcut)', value: 'shortcut' },
         { name: '❌ Изход', value: 'exit' }
       ]
     }]);
@@ -429,6 +511,12 @@ function generateGlobalRules(ide: string): string {
 | "refresh" | Context Refresh |
 | "внимавай" | REPAIR режим |
 | "backup първо" | Задължителен backup |
+
+## ⚠️ Споделена отговорност
+
+Паметта е споделена отговорност между потребителя и AI агента.
+Винаги изчакай потвърждение, че .memory/ е обновен, преди да затвориш сесията.
+Ако сесията бъде затворена преди записа — паметта остава неактуална.
 
 ## 🛠️ Инструменти
 
@@ -519,6 +607,12 @@ async function createProjectRules(projectDir: string): Promise<void> {
 | "внимавай" / "важно е" | REPAIR режим |
 | "backup първо" | Задължителен backup |
 | "обясни плана" | Покажи стъпките преди да започнеш |
+
+## ⚠️ Споделена отговорност
+
+Паметта е споделена отговорност между потребителя и AI агента.
+Винаги изчакай потвърждение, че .memory/ е обновен, преди да затвориш сесията.
+Ако сесията бъде затворена преди записа — паметта остава неактуална.
 
 ## 🚀 Готови шаблони за стартиране
 

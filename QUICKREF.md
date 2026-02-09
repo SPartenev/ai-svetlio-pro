@@ -1,18 +1,18 @@
-# 🧰 Svet_AI Quick Reference
+# 🧰 AI_Svetlio Quick Reference
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 🚀 Команди
 
 ```bash
-svet setup              # Глобална настройка (веднъж)
-svet init               # Инициализирай проект
-svet onboard            # Вкарай съществуващ проект
-svet repair             # Режим ремонт
-svet analyze            # Дълбок анализ
-svet status             # Покажи състояние
-svet tools              # Покажи инструменти
-svet mcp-wizard         # Wizard за MCP сървъри
+svetlio setup              # Глобална настройка (веднъж)
+svetlio init               # Инициализирай проект
+svetlio onboard            # Вкарай съществуващ проект
+svetlio repair             # Режим ремонт
+svetlio analyze            # Дълбок анализ
+svetlio status             # Покажи състояние
+svetlio tools              # Покажи инструменти
+svetlio mcp-wizard         # Wizard за MCP сървъри
 ```
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -22,9 +22,9 @@ svet mcp-wizard         # Wizard за MCP сървъри
 | Режим | Команда | Кога |
 |-------|---------|------|
 | **NORMAL** | (default) | Текуща работа |
-| **REPAIR** | `svet repair` | Поправки (backup + одобрение) |
-| **ONBOARD** | `svet onboard` | Съществуващ проект |
-| **ANALYZE** | `svet analyze` | Legacy система |
+| **REPAIR** | `svetlio repair` | Поправки (backup + одобрение) |
+| **ONBOARD** | `svetlio onboard` | Съществуващ проект |
+| **ANALYZE** | `svetlio analyze` | Legacy система |
 | → EXTEND | (след analyze) | Добави функции |
 | → REWRITE | (след analyze) | Пренапиши (същият UX) |
 
@@ -55,7 +55,7 @@ svet mcp-wizard         # Wizard за MCP сървъри
 |------|------|---------|
 | **FastMCP** ⭐ | Python | `pip install fastmcp` |
 | generator-mcp | Node.js | `npm i -g yo generator-mcp` |
-| openapi-to-mcpserver | Node.js | `npm i -g openapi-to-mcpserver` ⚠️ |
+| openapi-to-mcpserver | Node.js | `npm i -g openapi-to-mcpserver` |
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -64,20 +64,20 @@ svet mcp-wizard         # Wizard за MCP сървъри
 ```bash
 # Нов проект
 mkdir project && cd project
-svet init
+svetlio init
 cursor .
 
 # Съществуващ проект
 cd old-project
-svet onboard
+svetlio onboard
 cursor .
 
 # Поправка
-svet repair
+svetlio repair
 # AI ще пита за одобрение
 
 # Legacy модернизация
-svet analyze
+svetlio analyze
 # После: EXTEND или REWRITE
 ```
 
@@ -93,5 +93,17 @@ svet analyze
 "Пренапиши с React и FastAPI"    ← REWRITE
 "Покажи какво остава"            ← TODO
 ```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## ⚠️ Преди да затвориш сесията
+
+```
+1. Кажи: "Приключваме, запиши промените"
+2. Изчакай: "✓ Записано в .memory/"
+3. Тогава затвори чата/IDE-то
+```
+
+> Ако затвориш преди записа → паметта е неактуална → следващата сесия започва с грешен контекст.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

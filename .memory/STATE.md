@@ -3,11 +3,11 @@
 ## Проект: ai-svetlio
 
 ## Текущо състояние
-- **Статус:** ✅ v1.3.3 - стабилна версия
-- **Последна сесия:** 2026-02-06
-- **Текуща задача:** Публикувано в npm и GitHub
+- **Статус:** ✅ v1.4.0 - стабилна версия
+- **Последна сесия:** 2026-02-09
+- **Текуща задача:** Publish v1.4.0 (svetlio web + shortcut + launcher)
 
-## Версия: 1.3.3
+## Версия: 1.4.0
 
 ## Какво включва текущата версия
 - **v1.0.0:** Базова функционалност, .memory/ система
@@ -18,11 +18,13 @@
 - **v1.3.1:** Пълно ребрандиране на всички файлове (~40 файла, ~5600 промени)
 - **v1.3.2:** Fix на VERSION константа в CLI
 - **v1.3.3:** Docs improvements — Context Refresh ~15, подробно инсталиране/деинсталиране, шаблони "старт"/"продължаваме"
+- **v1.4.0:** Web Viewer (`svetlio web`) — визуален read-only преглед на .memory/ в браузъра, auto-refresh, desktop shortcut, open-memory launcher
 
 ## Публикувано
-- ✅ npm: ai-svetlio@1.3.3 (публикувано)
-- ✅ GitHub: github.com/SPartenev/Ai-Svetlio (commit a2d902c)
+- ⏳ npm: ai-svetlio@1.4.0 (чака publish)
+- ⏳ GitHub: (чака commit)
 
 ## Следваща стъпка
-1. `svetlio upgrade` команда — автоматично обновяване на CLAUDE.md/.cursorrules без да пипа .memory/
-2. По-добра интеграция с MCP Registry API (пагинация, детайлни резултати)
+1. Еднодумни workflow команди: `svetlio start`, `svetlio continue`, `svetlio end`, `svetlio import` (+ БГ варианти: старт, продължи, край, вкарай)
+2. `svetlio upgrade` команда — автоматично обновяване на CLAUDE.md/.cursorrules без да пипа .memory/
+3. По-добра интеграция с MCP Registry API (пагинация, детайлни резултати)
