@@ -15,5 +15,25 @@
 
 ## Проблеми
 
-(Няма проблеми засега - добре!)
+### 2026-02-13 VERSION константи не се обновяват при version bump
+**Проблем:** При npm publish, `svetlio --version` показва стара версия (1.5.0 вместо 1.5.1)
+**Причина:** VERSION е hardcoded в 2 файла (cli.ts:31, modes.ts:18) — при bump на package.json те не се обновяват автоматично
+**Решение:** Ръчно синхронизиране на 3 места: package.json + cli.ts + modes.ts
+**Превенция:** При всеки version bump, винаги обнови и трите файла. Бъдеща идея: чети версията от package.json динамично
+
+---
+
+### 2026-02-13 Клиентски данни публикувани в npm (v1.5.0)
+**Проблем:** documents/doc_prototype/ с реални .eml, .docx файлове попадна в npm пакета (1.8 MB)
+**Причина:** .npmignore не изключваше doc_prototype/ директорията
+**Решение:** Добавен documents/doc_prototype/ в .npmignore, republish като v1.5.1 (128 kB)
+**Превенция:** Винаги проверявай `npm pack --dry-run` преди publish. Добавяй прототипни/тестови данни в .npmignore
+
+---
+
+### 2026-02-13 `svetlio requests process` липсваше от CLI
+**Проблем:** `svetlio requests process` → "Неизвестно действие: process"
+**Причина:** processInbox() беше в requests.ts, но не беше свързана като CLI action
+**Решение:** Добавен `process` action в cli.ts (v1.5.4)
+**Превенция:** При добавяне на нов метод в module, веднага добави и CLI action + документация
 
