@@ -28,7 +28,7 @@ import { MCPWizard } from './mcp-wizard';
 import { WebViewer } from './web';
 import { RequestsManager } from './requests';
 
-const VERSION = '1.5.4';
+const VERSION = '1.5.5';
 
 // ============================================================================
 // BANNER
@@ -662,6 +662,7 @@ program
         { name: '🌐 Web Viewer (web)', value: 'web' },
         { name: '⬆️  Обнови правилата (upgrade)', value: 'upgrade' },
         { name: '📋 Клиентски заявки (requests)', value: 'requests' },
+        { name: '📝 Добави запис в лога (log)', value: 'log-prompt' },
         new inquirer.Separator('─── Инструменти ───'),
         { name: '🛠️  Каталог инструменти (tools)', value: 'tools' },
         { name: '🔍 Търси в MCP Registry (registry)', value: 'registry-search' },
@@ -675,6 +676,19 @@ program
     
     if (action === 'exit') {
       console.log(chalk.gray('Довиждане! 👋'));
+      return;
+    }
+
+    // Специален случай за log (изисква input)
+    if (action === 'log-prompt') {
+      const { message } = await inquirer.prompt([{
+        type: 'input',
+        name: 'message',
+        message: 'Запис в лога:',
+      }]);
+      if (message.trim()) {
+        await program.parseAsync(['node', 'svetlio', 'log', message]);
+      }
       return;
     }
 

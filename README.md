@@ -194,7 +194,10 @@ project/
 | `svetlio status` | Покажи състояние |
 | `svetlio web` | Web преглед на .memory/ в браузъра |
 | `svetlio upgrade` | Обнови правилата на проекта до текущата версия |
-| `svetlio requests` | Управление на клиентски заявки |
+| `svetlio requests` | Списък на клиентски заявки |
+| `svetlio requests check` | Провери inbox за нови файлове |
+| `svetlio requests process` | Обработи файлове от inbox |
+| `svetlio requests archive` | Покажи завършени заявки за архивиране |
 | `svetlio shortcut` | Създай desktop shortcut за Web Viewer |
 | `svetlio mcp-wizard` | Wizard за MCP сървъри |
 | `svetlio log "съобщение"` | Добави ръчен запис |

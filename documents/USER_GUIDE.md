@@ -627,6 +627,7 @@ svetlio shortcut   # Създава desktop shortcut
 ```bash
 svetlio requests          # Списък на заявки (от REGISTRY.md)
 svetlio requests check    # Провери inbox за нови файлове
+svetlio requests process  # Обработи файлове от inbox (Python bridge)
 svetlio requests archive  # Покажи завършени заявки за архивиране
 ```
 

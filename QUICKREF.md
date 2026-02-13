@@ -11,7 +11,14 @@ svetlio onboard            # Вкарай съществуващ проект
 svetlio repair             # Режим ремонт
 svetlio analyze            # Дълбок анализ
 svetlio status             # Покажи състояние
+svetlio web                # Web преглед на .memory/ в браузъра
+svetlio upgrade            # Обнови правилата до текущата версия
+svetlio requests           # Управление на клиентски заявки
+svetlio requests process   # Обработи файлове от inbox
+svetlio log "съобщение"    # Добави ръчен запис в LOG.md
+svetlio shortcut           # Desktop shortcut за Web Viewer
 svetlio tools              # Покажи инструменти
+svetlio registry <query>   # Търси в MCP Registry
 svetlio mcp-wizard         # Wizard за MCP сървъри
 ```
 
