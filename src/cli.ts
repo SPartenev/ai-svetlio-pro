@@ -28,7 +28,7 @@ import { MCPWizard } from './mcp-wizard';
 import { WebViewer } from './web';
 import { RequestsManager } from './requests';
 
-const VERSION = '1.5.2';
+const VERSION = '1.5.3';
 
 // ============================================================================
 // BANNER
@@ -531,8 +531,16 @@ program
       }
     }
 
+    // 8. Създай .requests/ ако липсва (добавено във v1.5.0+)
+    const requests = new RequestsManager(projectDir);
+    if (!await requests.exists()) {
+      const projectName = path.basename(projectDir);
+      await requests.initialize(projectName);
+      console.log(chalk.green(`\n   📋 Създадена .requests/ папка (нова във v1.5.0)`));
+    }
+
     console.log(chalk.green(`\n✅ Обновено от v${currentVersion} → v${VERSION}`));
-    console.log(chalk.gray('   .memory/ и .requests/ НЕ са пипнати.'));
+    console.log(chalk.gray('   .memory/ НЕ е пипната.'));
   });
 
 // ----------------------------------------------------------------------------
