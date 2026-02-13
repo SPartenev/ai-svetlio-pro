@@ -28,3 +28,11 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Local project data (not for git)
+.requests/
+.memory/backups/
+nul
+
+# Prototype client data (contains real emails/docs)
+documents/doc_prototype/
