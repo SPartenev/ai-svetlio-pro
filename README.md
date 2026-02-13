@@ -8,7 +8,7 @@
   ███████║ ╚████╔╝ ███████╗   ██║   ███████╗██║╚██████╔╝
   ╚══════╝  ╚═══╝  ╚══════╝   ╚═╝   ╚══════╝╚═╝ ╚═════╝
 
-  Universal AI Agent Toolkit & Project Memory v1.5.5
+  Universal AI Agent Toolkit & Project Memory v1.5.6
 ```
 
 **AI_Svetlio** е система за управление на AI-assisted разработка, която решава ключови проблеми:

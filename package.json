@@ -1,6 +1,6 @@
 {
   "name": "ai-svetlio",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "Universal AI Agent Toolkit & Project Memory - Инструменти, памет и режими за AI-assisted разработка",
   "main": "dist/cli.js",
   "bin": {
