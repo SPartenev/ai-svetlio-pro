@@ -28,7 +28,7 @@ import { MCPWizard } from './mcp-wizard';
 import { WebViewer } from './web';
 import { RequestsManager } from './requests';
 
-const VERSION = '1.5.0';
+const VERSION = '1.5.2';
 
 // ============================================================================
 // BANNER
