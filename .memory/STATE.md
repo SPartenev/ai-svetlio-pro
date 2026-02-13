@@ -3,9 +3,9 @@
 ## Проект: ai-svetlio
 
 ## Текущо състояние
-- **Статус:** ✅ v1.5.7 — repo cleanup + version sync (готова за publish)
+- **Статус:** ✅ v1.5.7 — публикувана и синхронизирана
 - **Последна сесия:** 2026-02-14
-- **Текуща задача:** Очаква npm publish
+- **Текуща задача:** Няма — всичко е deploy-нато
 
 ## Версия: 1.5.7
 
@@ -29,11 +29,10 @@
 - **v1.5.7:** Repo cleanup + version sync — премахнати дубликати, остарели документи в archive/, всички версии синхронизирани, npm пакет 103 kB (от 129 kB), ARCHITECTURE.md обновен
 
 ## Публикувано
-- ⏳ npm: ai-svetlio@1.5.7 (готова за publish)
-- ✅ GitHub: github.com/SPartenev/Ai-Svetlio
+- ✅ npm: ai-svetlio@1.5.7 (публикувано)
+- ✅ GitHub: github.com/SPartenev/Ai-Svetlio (commit cbb5614)
 
 ## Следваща стъпка
-1. npm publish v1.5.7
-2. Еднодумни workflow команди: `svetlio start/continue/end/import` (+ БГ варианти)
-3. По-добра интеграция с MCP Registry API
-4. `svetlio watch` — автоматично следене на inbox
+1. Еднодумни workflow команди: `svetlio start/continue/end/import` (+ БГ варианти)
+2. По-добра интеграция с MCP Registry API
+3. `svetlio watch` — автоматично следене на inbox
