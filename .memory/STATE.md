@@ -3,11 +3,11 @@
 ## Проект: ai-svetlio
 
 ## Текущо състояние
-- **Статус:** ✅ v1.5.6 — публикувана и синхронизирана
-- **Последна сесия:** 2026-02-13
-- **Текуща задача:** Няма — всичко е deploy-нато
+- **Статус:** ✅ v1.5.7 — repo cleanup + version sync (готова за publish)
+- **Последна сесия:** 2026-02-14
+- **Текуща задача:** Очаква npm publish
 
-## Версия: 1.5.6
+## Версия: 1.5.7
 
 ## Какво включва текущата версия
 - **v1.0.0:** Базова функционалност, .memory/ система
@@ -26,12 +26,14 @@
 - **v1.5.4:** Добавена `svetlio requests process` команда
 - **v1.5.5:** Документация синхронизирана — QUICKREF, USER_GUIDE, README, интерактивно меню
 - **v1.5.6:** README банер синхронизиран с версията
+- **v1.5.7:** Repo cleanup + version sync — премахнати дубликати, остарели документи в archive/, всички версии синхронизирани, npm пакет 103 kB (от 129 kB), ARCHITECTURE.md обновен
 
 ## Публикувано
-- ✅ npm: ai-svetlio@1.5.6 (публикувано)
-- ✅ GitHub: github.com/SPartenev/Ai-Svetlio (commit 8a11771)
+- ⏳ npm: ai-svetlio@1.5.7 (готова за publish)
+- ✅ GitHub: github.com/SPartenev/Ai-Svetlio
 
 ## Следваща стъпка
-1. Еднодумни workflow команди: `svetlio start/continue/end/import` (+ БГ варианти)
-2. По-добра интеграция с MCP Registry API
-3. `svetlio watch` — автоматично следене на inbox
+1. npm publish v1.5.7
+2. Еднодумни workflow команди: `svetlio start/continue/end/import` (+ БГ варианти)
+3. По-добра интеграция с MCP Registry API
+4. `svetlio watch` — автоматично следене на inbox

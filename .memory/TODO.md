@@ -40,6 +40,13 @@
 - [x] v1.5.5: QUICKREF.md, USER_GUIDE.md, README.md, интерактивно меню — пълна синхронизация
 - [x] v1.5.6: README банер синхронизиран с версията
 
+### ✅ #6 — Repo cleanup + Version sync (v1.5.7)
+- [x] Премахнати дубликати (root .ts, Progres/, documents/*.pdf, documents/*.py)
+- [x] Остарели документи архивирани в documents/archive/
+- [x] Всички версии синхронизирани на v1.5.7 (11 файла)
+- [x] .npmignore обновен (103 kB / 45 файла вместо 1.8 MB / 84)
+- [x] ARCHITECTURE.md обновен с реалната структура
+
 ### ✅ #4 — Секция "Споделена отговорност" ✅
 - [x] README.md, USER_GUIDE.md, шаблоните в `svetlio init`
 

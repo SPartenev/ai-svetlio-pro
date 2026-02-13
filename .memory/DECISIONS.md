@@ -179,3 +179,18 @@
 
 **Последствия:** v1.5.0 ще включва и трите: upgrade + .memory/ fix + ClientRequests.
 
+---
+
+### 2026-02-14 Пълно почистване и синхронизация на repo (v1.5.7)
+
+**Контекст:** Одит показа, че GitHub repo съдържа: дублирани файлове (root .ts = src/), CargoFlow-специфични документи, PDF-и (6 MB), остарели версии в множество файлове. npm пакетът включва 4 излишни файла (71 kB). Нито един documents/ файл не се ползва от кода — всичко е inline в src/.
+
+**Решение:**
+1. **Изтрий от repo:** root cli.ts/memory.ts/modes.ts (дубликати на src/), Progres/ папка (лични бележки + PDF), documents/ PDF-и (6 MB), documents/setup_new_client.py (CargoFlow), documents/*.py (дублирани в templates/requests/python/)
+2. **Премести в documents/archive/:** Svet AI Iron Rules.txt (стар бранд, първа версия), SVET_AI_FULL_DOCUMENTATION.md (v1.0.0, историческа), SVET_ECOSYSTEM_ROADMAP2.md (Draft v1.0), TIMELINE_AND_GAP_ANALYSIS.md (CargoFlow), README.md (CargoFlow ClientRequests), REGISTRY.md + TEMPLATE.md (дублирани в templates/requests/)
+3. **Синхронизирай версии:** CLAUDE.md, .antigravity/rules.md, .cursorrules → v1.5.7; src/tools.ts header → v1.5.7; documents/IRON_RULES.md → v1.5.7; documents/USER_GUIDE.md → v1.5.7
+4. **Обнови .npmignore:** documents/archive/, Progres/
+5. **Обнови ARCHITECTURE.md** с реалната структура
+
+**Алтернативи:** Изтриване на всички остарели файлове (отхвърлено — имат историческа стойност)
+**Последствия:** Чисто repo, всички версии синхронизирани, npm пакетът е по-малък

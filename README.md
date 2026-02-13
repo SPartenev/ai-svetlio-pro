@@ -8,7 +8,7 @@
   ███████║ ╚████╔╝ ███████╗   ██║   ███████╗██║╚██████╔╝
   ╚══════╝  ╚═══╝  ╚══════╝   ╚═╝   ╚══════╝╚═╝ ╚═════╝
 
-  Universal AI Agent Toolkit & Project Memory v1.5.6
+  Universal AI Agent Toolkit & Project Memory v1.5.7
 ```
 
 **AI_Svetlio** е система за управление на AI-assisted разработка, която решава ключови проблеми:
@@ -30,7 +30,7 @@ npm install -g ai-svetlio
 ### Версии
 ```bash
 npm install -g ai-svetlio@latest    # Последна версия (препоръчително)
-npm install -g ai-svetlio@1.5.0     # Конкретна версия
+npm install -g ai-svetlio@1.5.7     # Конкретна версия
 ```
 
 ### Обновяване
@@ -410,6 +410,13 @@ AI агентът обновява `.memory/` в края на всяка сес
 ---
 
 ## 📝 Changelog
+
+### v1.5.7 (2026-02-14)
+- 🧹 **Repo cleanup** — премахнати дублирани файлове (root .ts, PDF-и, CargoFlow-специфични скриптове)
+- 📂 **documents/archive/** — остарели документи преместени в архив (SVET_AI_FULL_DOCUMENTATION, ROADMAP, TIMELINE)
+- 🔄 **Version sync** — всички файлове синхронизирани с v1.5.7 (CLAUDE.md, .cursorrules, .antigravity/, IRON_RULES, USER_GUIDE, src/)
+- 📦 **npm cleanup** — излишни файлове премахнати от npm пакета
+- 📐 **ARCHITECTURE.md** — обновен с реалната структура на проекта
 
 ### v1.5.0 (2026-02-13)
 - ⬆️ **`svetlio upgrade`** — обновява правилата (CLAUDE.md, .cursorrules) без да пипа .memory/ и .requests/

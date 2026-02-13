@@ -37,29 +37,21 @@ coverage/
 CLAUDE.md
 .requests/
 
-# Prototype data (contains real client data!)
+# Archived/historical documents (not needed in npm package)
+documents/archive/
 documents/doc_prototype/
-documents/*.py
-documents/setup_new_client.py
 
 # Large files - PDFs
-Progres/
-documents/*.pdf
 *.pdf
 
 # Misc
 nul
-
-# Duplicate source files in root
-cli.ts
-memory.ts
-modes.ts
 
 # Keep only essential files:
 # - dist/ (compiled code)
 # - package.json
 # - README.md
 # - QUICKREF.md
-# - documents/*.md (docs only, no prototypes/scripts)
+# - documents/IRON_RULES.md, USER_GUIDE.md, REFRESH_REMINDER.md
 # - templates/ (request templates)
 # - registry.yaml

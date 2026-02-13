@@ -1,5 +1,5 @@
 /**
- * AI_Svetlio - Tools Module v1.3.0
+ * AI_Svetlio - Tools Module v1.5.7
  *
  * Управлява каталога с инструменти и MCP Registry интеграция
  * - Вграден каталог с проверени инструменти

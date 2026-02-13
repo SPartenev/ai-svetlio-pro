@@ -1,5 +1,36 @@
 # Лог на проекта
 
+## 2026-02-14
+
+### 🧹 Сесия: Repo cleanup + Version sync → v1.5.7
+
+**Направено:**
+
+1. ✅ **Пълен одит** на GitHub repo vs npm пакет — открити множество несъответствия
+2. ✅ **Премахнати дубликати от repo:**
+   - Root `cli.ts`, `memory.ts`, `modes.ts` (копия на src/)
+   - `Progres/` папка (лични бележки + PDF)
+   - `documents/*.pdf` (6 MB)
+   - `documents/*.py` (дублирани в templates/requests/python/)
+   - `documents/setup_new_client.py` (CargoFlow-специфичен)
+3. ✅ **Архивирани остарели документи** в `documents/archive/`:
+   - `Svet AI Iron Rules.txt` (v1.0, стар бранд)
+   - `SVET_AI_FULL_DOCUMENTATION.md` (v1.0.0)
+   - `SVET_ECOSYSTEM_ROADMAP2.md` (Draft v1.0)
+   - `TIMELINE_AND_GAP_ANALYSIS.md` (CargoFlow)
+   - `README.md` → `CLIENTREQUESTS_README.md` (CargoFlow)
+   - `REGISTRY.md`, `TEMPLATE.md` (дублирани в templates/)
+4. ✅ **Синхронизирани версии** — v1.5.7 навсякъде:
+   - package.json, src/cli.ts, src/modes.ts, src/tools.ts header
+   - CLAUDE.md, .cursorrules, .antigravity/rules.md
+   - README.md банер + changelog + пример
+   - documents/IRON_RULES.md, documents/USER_GUIDE.md
+5. ✅ **Обновен .npmignore** — npm пакет 103.5 kB / 45 файла (от 1.8 MB / 84 файла)
+6. ✅ **ARCHITECTURE.md** — обновен с реалната структура на проекта
+7. ✅ **documents/archive/README.md** — създаден с описание на архивираните файлове
+
+---
+
 ## 2026-02-13
 
 ### 🚀 Сесия: Deploy v1.5.0 → v1.5.6
