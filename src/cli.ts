@@ -26,8 +26,9 @@ import { Modes } from './modes';
 import { Tools } from './tools';
 import { MCPWizard } from './mcp-wizard';
 import { WebViewer } from './web';
+import { RequestsManager } from './requests';
 
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 
 // ============================================================================
 // BANNER
@@ -144,7 +145,11 @@ program
     
     // Създай .memory/
     await memory.initialize(projectName);
-    
+
+    // Създай .requests/
+    const requests = new RequestsManager(process.cwd());
+    await requests.initialize(projectName);
+
     // Създай IDE rules
     await createProjectRules(process.cwd());
 
@@ -161,6 +166,10 @@ program
     console.log(chalk.gray('  .memory/DECISIONS.md'));
     console.log(chalk.gray('  .memory/PROBLEMS.md'));
     console.log(chalk.gray('  .memory/MODE.md'));
+    console.log(chalk.gray('  .requests/README.md'));
+    console.log(chalk.gray('  .requests/TEMPLATE.md'));
+    console.log(chalk.gray('  .requests/REGISTRY.md'));
+    console.log(chalk.gray('  .requests/config.json'));
     console.log(chalk.gray('  .cursorrules'));
     console.log(chalk.gray('  CLAUDE.md'));
     console.log(chalk.gray(`  ${launcherFile}`));
@@ -404,6 +413,207 @@ program
   });
 
 // ----------------------------------------------------------------------------
+// svetlio upgrade - Обнови правилата на проекта
+// ----------------------------------------------------------------------------
+program
+  .command('upgrade')
+  .alias('обнови')
+  .description('Обнови правилата на проекта до текущата версия')
+  .action(async () => {
+    showBanner();
+
+    const memory = new Memory(process.cwd());
+    if (!await memory.exists()) {
+      console.log(chalk.red('❌ Този проект не е инициализиран.'));
+      console.log(chalk.gray('   Използвай: svetlio init'));
+      return;
+    }
+
+    const projectDir = process.cwd();
+    const claudeMdPath = path.join(projectDir, 'CLAUDE.md');
+
+    // 1. Определи текущата версия на генерираните правила
+    let currentVersion = 'unknown';
+    if (await fs.pathExists(claudeMdPath)) {
+      const content = await fs.readFile(claudeMdPath, 'utf-8');
+      const versionMatch = content.match(/<!-- AI_Svetlio v([\d.]+) -->/);
+      if (versionMatch) {
+        currentVersion = versionMatch[1];
+      } else {
+        currentVersion = 'pre-1.5.0';
+      }
+    } else {
+      console.log(chalk.yellow('⚠️  CLAUDE.md не е намерен. Ще бъде създаден.'));
+      currentVersion = 'none';
+    }
+
+    // 2. Провери дали има нужда от upgrade
+    if (currentVersion === VERSION) {
+      console.log(chalk.green(`✅ Правилата вече са на версия v${VERSION}`));
+      console.log(chalk.gray('   Няма нужда от обновяване.'));
+      return;
+    }
+
+    console.log(chalk.cyan(`📋 Текуща версия на правилата: v${currentVersion}`));
+    console.log(chalk.cyan(`📋 Нова версия: v${VERSION}`));
+    console.log();
+
+    // 3. Backup на старите файлове
+    const filesToBackup = ['CLAUDE.md', '.cursorrules', '.antigravity/rules.md'];
+    const existingFiles = [];
+    for (const file of filesToBackup) {
+      if (await fs.pathExists(path.join(projectDir, file))) {
+        existingFiles.push(file);
+      }
+    }
+
+    if (existingFiles.length > 0) {
+      console.log(chalk.yellow('📦 Backup на стари файлове...'));
+      const backupDir = await memory.createBackup(existingFiles, `Upgrade от v${currentVersion} към v${VERSION}`);
+      console.log(chalk.gray(`   Backup: ${path.relative(projectDir, backupDir)}`));
+      console.log();
+
+      // 4. Запази старото съдържание за diff
+      const oldContents: Record<string, string> = {};
+      for (const file of existingFiles) {
+        oldContents[file] = await fs.readFile(path.join(projectDir, file), 'utf-8');
+      }
+
+      // 5. Генерирай нови правила
+      console.log(chalk.cyan('🔄 Генериране на нови правила...'));
+      await createProjectRules(projectDir);
+
+      // 6. Покажи diff
+      console.log(chalk.cyan('\n📊 Промени:\n'));
+      for (const file of existingFiles) {
+        const newContent = await fs.readFile(path.join(projectDir, file), 'utf-8');
+        const oldLines = oldContents[file].split('\n');
+        const newLines = newContent.split('\n');
+
+        const added = newLines.filter(l => !oldLines.includes(l));
+        const removed = oldLines.filter(l => !newLines.includes(l));
+
+        if (added.length === 0 && removed.length === 0) {
+          console.log(chalk.gray(`   ${file}: без промени`));
+        } else {
+          console.log(chalk.white(`   ${file}:`));
+          if (removed.length > 0) {
+            console.log(chalk.red(`     - ${removed.length} реда премахнати`));
+            removed.slice(0, 5).forEach(l => {
+              if (l.trim()) console.log(chalk.red(`       - ${l.trim().substring(0, 80)}`));
+            });
+            if (removed.length > 5) console.log(chalk.gray(`       ... и още ${removed.length - 5}`));
+          }
+          if (added.length > 0) {
+            console.log(chalk.green(`     + ${added.length} реда добавени`));
+            added.slice(0, 5).forEach(l => {
+              if (l.trim()) console.log(chalk.green(`       + ${l.trim().substring(0, 80)}`));
+            });
+            if (added.length > 5) console.log(chalk.gray(`       ... и още ${added.length - 5}`));
+          }
+        }
+      }
+    } else {
+      // Няма стари файлове, просто генерирай нови
+      console.log(chalk.cyan('🔄 Генериране на нови правила...'));
+      await createProjectRules(projectDir);
+    }
+
+    // 7. Обнови глобалните правила ако има .claude/CLAUDE.md
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const globalClaudeMd = path.join(homeDir, '.claude', 'CLAUDE.md');
+    if (await fs.pathExists(globalClaudeMd)) {
+      const globalContent = await fs.readFile(globalClaudeMd, 'utf-8');
+      if (globalContent.includes('AI_Svetlio')) {
+        const newGlobal = generateGlobalRules('claude-code');
+        await fs.writeFile(globalClaudeMd, newGlobal);
+        console.log(chalk.green(`\n   ✅ Глобални правила обновени: ~/.claude/CLAUDE.md`));
+      }
+    }
+
+    console.log(chalk.green(`\n✅ Обновено от v${currentVersion} → v${VERSION}`));
+    console.log(chalk.gray('   .memory/ и .requests/ НЕ са пипнати.'));
+  });
+
+// ----------------------------------------------------------------------------
+// svetlio requests - Управление на клиентски заявки
+// ----------------------------------------------------------------------------
+program
+  .command('requests [action]')
+  .alias('заявки')
+  .description('Управление на клиентски заявки (list, check, archive)')
+  .action(async (action?: string) => {
+    const requests = new RequestsManager(process.cwd());
+
+    if (!await requests.exists()) {
+      console.log(chalk.red('❌ Този проект няма .requests/ папка.'));
+      console.log(chalk.gray('   Използвай: svetlio init'));
+      return;
+    }
+
+    if (!action || action === 'list') {
+      // Покажи списък на заявки
+      const allRequests = await requests.listRequests();
+      const stats = await requests.getStats();
+
+      console.log(chalk.cyan(`\n📋 Клиентски заявки: ${stats.total} общо`));
+      console.log(chalk.gray(`   Активни: ${stats.active} | Завършени: ${stats.completed} | Отказани: ${stats.rejected}\n`));
+
+      if (allRequests.length === 0) {
+        console.log(chalk.gray('   Няма заявки все още.'));
+        console.log(chalk.gray('   Сложи файл в .requests/inbox/ за да започнеш.'));
+      } else {
+        for (const req of allRequests) {
+          const icon = req.priority === 'Критичен' || req.priority === 'критичен' ? '🔴' :
+                       req.priority === 'Висок' || req.priority === 'висок' ? '⚠️' :
+                       req.priority === 'Нисък' || req.priority === 'нисък' ? '🔵' : '⬜';
+          console.log(chalk.white(`   ${icon} ${req.id} — ${req.subject}`));
+          console.log(chalk.gray(`      ${req.status} | ${req.client} | ${req.date}`));
+        }
+      }
+
+      // Провери inbox
+      const inboxFiles = await requests.checkInbox();
+      if (inboxFiles.length > 0) {
+        console.log(chalk.yellow(`\n📥 Inbox: ${inboxFiles.length} файла чакат обработка:`));
+        inboxFiles.forEach(f => console.log(chalk.yellow(`   • ${f}`)));
+      }
+
+    } else if (action === 'check') {
+      // Провери inbox
+      const inboxFiles = await requests.checkInbox();
+      if (inboxFiles.length === 0) {
+        console.log(chalk.green('✅ Inbox е празен — няма нови заявки.'));
+      } else {
+        console.log(chalk.yellow(`📥 Намерени ${inboxFiles.length} файла в inbox:`));
+        inboxFiles.forEach(f => console.log(chalk.yellow(`   • ${f}`)));
+        console.log(chalk.gray('\n   За обработка, кажи на AI агента: "обработи заявките от inbox"'));
+      }
+
+    } else if (action === 'archive') {
+      // Покажи завършени заявки за архивиране
+      const allRequests = await requests.listRequests();
+      const completed = allRequests.filter(r =>
+        ['Завършена', 'завършена', 'Отказана', 'отказана'].includes(r.status)
+      );
+
+      if (completed.length === 0) {
+        console.log(chalk.gray('Няма завършени заявки за архивиране.'));
+      } else {
+        console.log(chalk.cyan(`📦 ${completed.length} заявки готови за архивиране:`));
+        for (const req of completed) {
+          console.log(chalk.gray(`   • ${req.id} — ${req.subject} (${req.status})`));
+        }
+        console.log(chalk.gray('\n   Използвай AI агента за архивиране на конкретна заявка.'));
+      }
+
+    } else {
+      console.log(chalk.red(`❌ Неизвестно действие: ${action}`));
+      console.log(chalk.gray('   Налични: list, check, archive'));
+    }
+  });
+
+// ----------------------------------------------------------------------------
 // Интерактивен режим (без команда)
 // ----------------------------------------------------------------------------
 program
@@ -421,6 +631,8 @@ program
         { name: '🔬 Дълбок анализ (analyze)', value: 'analyze' },
         { name: '📊 Покажи статус (status)', value: 'status' },
         { name: '🌐 Web Viewer (web)', value: 'web' },
+        { name: '⬆️  Обнови правилата (upgrade)', value: 'upgrade' },
+        { name: '📋 Клиентски заявки (requests)', value: 'requests' },
         new inquirer.Separator('─── Инструменти ───'),
         { name: '🛠️  Каталог инструменти (tools)', value: 'tools' },
         { name: '🔍 Търси в MCP Registry (registry)', value: 'registry-search' },
@@ -459,7 +671,8 @@ program
 // ============================================================================
 
 function generateGlobalRules(ide: string): string {
-  return `# AI_Svetlio - Глобални правила за ${ide}
+  return `<!-- AI_Svetlio v${VERSION} -->
+# AI_Svetlio - Глобални правила за ${ide}
 
 ## 🧠 Система за памет
 
@@ -469,11 +682,21 @@ function generateGlobalRules(ide: string): string {
 1. ПЪРВО прочети \`.memory/STATE.md\` - там е текущото състояние
 2. Прочети \`.memory/MODE.md\` - в какъв режим сме
 3. При нужда прочети \`.memory/ARCHITECTURE.md\` и \`.memory/TOOLS.md\`
+4. Провери \`.requests/inbox/\` — ако има файлове, докладвай и чакай одобрение
 
 ### При работа:
 - Обновявай \`.memory/LOG.md\` след всяка значима промяна
 - Записвай решения в \`.memory/DECISIONS.md\`
 - Добавяй проблеми в \`.memory/PROBLEMS.md\`
+
+### След работа ВИНАГИ обнови:
+\`\`\`
+.memory/STATE.md      ← Ново състояние (ВИНАГИ)
+.memory/LOG.md        ← Какво направи (ВИНАГИ)
+.memory/TODO.md       ← Завършени/нови задачи (ако има промени)
+.memory/PROBLEMS.md   ← Срещнати/решени проблеми (ако има промени)
+.memory/DECISIONS.md  ← Взети решения (ако има промени)
+\`\`\`
 
 ### Режими:
 
@@ -525,7 +748,8 @@ function generateGlobalRules(ide: string): string {
 }
 
 async function createProjectRules(projectDir: string): Promise<void> {
-  const rulesContent = `# AI_Svetlio - Правила за този проект
+  const rulesContent = `<!-- AI_Svetlio v${VERSION} -->
+# AI_Svetlio - Правила за този проект
 
 ## 🧠 Памет на проекта
 
@@ -546,10 +770,16 @@ async function createProjectRules(projectDir: string): Promise<void> {
 .memory/PROBLEMS.md      ← Срещнати проблеми
 \`\`\`
 
+### Провери за нови заявки:
+Ако \`.requests/inbox/\` съществува и има файлове → докладвай и чакай одобрение преди обработка.
+
 ### След работа ВИНАГИ обнови:
 \`\`\`
-.memory/STATE.md    ← Ново състояние
-.memory/LOG.md      ← Какво направи
+.memory/STATE.md      ← Ново състояние (ВИНАГИ)
+.memory/LOG.md        ← Какво направи (ВИНАГИ)
+.memory/TODO.md       ← Завършени/нови задачи (ако има промени)
+.memory/PROBLEMS.md   ← Срещнати/решени проблеми (ако има промени)
+.memory/DECISIONS.md  ← Взети решения (ако има промени)
 \`\`\`
 
 ## 🔧 Режими
@@ -597,6 +827,8 @@ async function createProjectRules(projectDir: string): Promise<void> {
 - Работим по: [от STATE.md]
 - Режим: [от MODE.md]
 - Следваща задача: [от TODO.md]
+- Проблеми: [от PROBLEMS.md]
+- Последни решения: [от DECISIONS.md]
 Продължавам ли?
 \`\`\`
 

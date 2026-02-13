@@ -28,6 +28,10 @@ const MEMORY_FILES: Array<{ filename: string; name: string; icon: string }> = [
   { filename: 'TOOLS.md', name: 'Tools', icon: '🛠️' },
 ];
 
+const REQUESTS_STATIC_FILES: Array<{ filename: string; name: string; icon: string }> = [
+  { filename: 'REGISTRY.md', name: 'Registry', icon: '📑' },
+];
+
 export class WebViewer {
   private projectDir: string;
   private server: http.Server | null = null;
@@ -54,6 +58,57 @@ export class WebViewer {
         content,
         icon: fileDef.icon,
       });
+    }
+
+    return files;
+  }
+
+  async readRequestsFiles(): Promise<MemoryFile[]> {
+    const requestsDir = path.join(this.projectDir, '.requests');
+    const files: MemoryFile[] = [];
+
+    if (!await fs.pathExists(requestsDir)) {
+      return files;
+    }
+
+    // Static files (REGISTRY.md)
+    for (const fileDef of REQUESTS_STATIC_FILES) {
+      const filePath = path.join(requestsDir, fileDef.filename);
+      let content = '';
+      try {
+        content = await fs.readFile(filePath, 'utf-8');
+      } catch {
+        content = '*Файлът не е намерен.*';
+      }
+      files.push({
+        name: fileDef.name,
+        filename: fileDef.filename,
+        content,
+        icon: fileDef.icon,
+      });
+    }
+
+    // Dynamic: processed/*.md files
+    const processedDir = path.join(requestsDir, 'processed');
+    if (await fs.pathExists(processedDir)) {
+      const entries = await fs.readdir(processedDir);
+      const crFiles = entries.filter(e => e.endsWith('.md') && e.startsWith('CR-')).sort();
+      for (const crFile of crFiles) {
+        const filePath = path.join(processedDir, crFile);
+        let content = '';
+        try {
+          content = await fs.readFile(filePath, 'utf-8');
+        } catch {
+          content = '*Файлът не е намерен.*';
+        }
+        const crId = crFile.replace('.md', '');
+        files.push({
+          name: crId,
+          filename: `processed/${crFile}`,
+          content,
+          icon: '📄',
+        });
+      }
     }
 
     return files;
@@ -207,17 +262,30 @@ export class WebViewer {
     return text;
   }
 
-  generateHTML(files: MemoryFile[], projectName: string): string {
+  generateHTML(files: MemoryFile[], projectName: string, requestsFiles?: MemoryFile[]): string {
     const filesJson = JSON.stringify(files.map(f => ({
       name: f.name,
       filename: f.filename,
       icon: f.icon,
     })));
 
+    const requestsFilesJson = requestsFiles ? JSON.stringify(requestsFiles.map(f => ({
+      name: f.name,
+      filename: f.filename,
+      icon: f.icon,
+    }))) : '[]';
+
+    const hasRequests = requestsFiles && requestsFiles.length > 0;
+
     const sectionsHtml = files.map((f, idx) => {
       const rendered = this.markdownToHtml(f.content);
       return `<section id="section-${idx}" class="memory-section${idx === 0 ? ' active' : ''}">${rendered}</section>`;
     }).join('\n');
+
+    const requestsSectionsHtml = requestsFiles ? requestsFiles.map((f, idx) => {
+      const rendered = this.markdownToHtml(f.content);
+      return `<section id="req-section-${idx}" class="memory-section">${rendered}</section>`;
+    }).join('\n') : '';
 
     return `<!DOCTYPE html>
 <html lang="bg">
@@ -444,28 +512,70 @@ tr:nth-child(even) td { background: var(--bg-card); }
 </div>
 <div class="main" id="main">
 ${sectionsHtml}
+${requestsSectionsHtml}
 </div>
 <script>
 const FILES = ${filesJson};
+const REQ_FILES = ${requestsFilesJson};
+const HAS_REQUESTS = ${hasRequests ? 'true' : 'false'};
 const nav = document.getElementById('nav');
 let activeIdx = 0;
+let activeType = 'memory'; // 'memory' or 'requests'
 
 function buildNav() {
   nav.innerHTML = '';
+
+  // Memory section header
+  const memHeader = document.createElement('div');
+  memHeader.className = 'nav-header';
+  memHeader.innerHTML = '🧠 Memory';
+  memHeader.style.cssText = 'padding: 8px 20px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;';
+  nav.appendChild(memHeader);
+
   FILES.forEach((f, i) => {
     const item = document.createElement('div');
-    item.className = 'nav-item' + (i === activeIdx ? ' active' : '');
+    item.className = 'nav-item' + (activeType === 'memory' && i === activeIdx ? ' active' : '');
     item.innerHTML = '<span class="icon">' + f.icon + '</span>' + f.name + '<span class="filename">' + f.filename + '</span>';
-    item.onclick = () => switchSection(i);
+    item.onclick = () => switchSection('memory', i);
     nav.appendChild(item);
   });
+
+  if (HAS_REQUESTS && REQ_FILES.length > 0) {
+    // Separator
+    const sep = document.createElement('div');
+    sep.style.cssText = 'border-top: 1px solid var(--border); margin: 8px 0;';
+    nav.appendChild(sep);
+
+    // Requests section header
+    const reqHeader = document.createElement('div');
+    reqHeader.className = 'nav-header';
+    reqHeader.innerHTML = '📋 Заявки (' + REQ_FILES.length + ')';
+    reqHeader.style.cssText = 'padding: 8px 20px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;';
+    nav.appendChild(reqHeader);
+
+    REQ_FILES.forEach((f, i) => {
+      const item = document.createElement('div');
+      item.className = 'nav-item' + (activeType === 'requests' && i === activeIdx ? ' active' : '');
+      item.innerHTML = '<span class="icon">' + f.icon + '</span>' + f.name + '<span class="filename">' + f.filename + '</span>';
+      item.onclick = () => switchSection('requests', i);
+      nav.appendChild(item);
+    });
+  }
 }
 
-function switchSection(idx) {
-  document.querySelectorAll('.memory-section').forEach((s, i) => {
-    s.classList.toggle('active', i === idx);
-  });
+function switchSection(type, idx) {
+  // Hide all
+  document.querySelectorAll('.memory-section').forEach(s => s.classList.remove('active'));
+  // Show selected
+  if (type === 'memory') {
+    const section = document.getElementById('section-' + idx);
+    if (section) section.classList.add('active');
+  } else {
+    const section = document.getElementById('req-section-' + idx);
+    if (section) section.classList.add('active');
+  }
   activeIdx = idx;
+  activeType = type;
   buildNav();
 }
 
@@ -481,6 +591,17 @@ setInterval(async () => {
       const section = document.getElementById('section-' + i);
       if (section) section.innerHTML = file.html;
     });
+
+    if (HAS_REQUESTS) {
+      const reqRes = await fetch('/api/requests');
+      if (reqRes.ok) {
+        const reqData = await reqRes.json();
+        reqData.forEach((file, i) => {
+          const section = document.getElementById('req-section-' + i);
+          if (section) section.innerHTML = file.html;
+        });
+      }
+    }
   } catch {}
 }, 5000);
 </script>
@@ -517,9 +638,23 @@ setInterval(async () => {
           return;
         }
 
+        if (req.url === '/api/requests') {
+          const requestsFiles = await this.readRequestsFiles();
+          const data = requestsFiles.map(f => ({
+            name: f.name,
+            filename: f.filename,
+            icon: f.icon,
+            html: this.markdownToHtml(f.content),
+          }));
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify(data));
+          return;
+        }
+
         // Serve main page
         const files = await this.readMemoryFiles();
-        const html = this.generateHTML(files, projectName);
+        const requestsFiles = await this.readRequestsFiles();
+        const html = this.generateHTML(files, projectName, requestsFiles);
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html);
       } catch (err: any) {
