@@ -28,7 +28,7 @@ import { MCPWizard } from './mcp-wizard';
 import { WebViewer } from './web';
 import { RequestsManager } from './requests';
 
-const VERSION = '1.5.3';
+const VERSION = '1.5.4';
 
 // ============================================================================
 // BANNER
@@ -549,7 +549,7 @@ program
 program
   .command('requests [action]')
   .alias('заявки')
-  .description('Управление на клиентски заявки (list, check, archive)')
+  .description('Управление на клиентски заявки (list, check, process, archive)')
   .action(async (action?: string) => {
     const requests = new RequestsManager(process.cwd());
 
@@ -615,9 +615,30 @@ program
         console.log(chalk.gray('\n   Използвай AI агента за архивиране на конкретна заявка.'));
       }
 
+    } else if (action === 'process') {
+      // Обработи файлове от inbox
+      const inboxFiles = await requests.checkInbox();
+      if (inboxFiles.length === 0) {
+        console.log(chalk.green('✅ Inbox е празен — няма какво да се обработи.'));
+        return;
+      }
+
+      console.log(chalk.cyan(`📥 Обработка на ${inboxFiles.length} файла от inbox...`));
+      const result = await requests.processInbox();
+
+      if (result.processed.length > 0) {
+        console.log(chalk.green(`\n✅ Обработени: ${result.processed.length}`));
+        result.processed.forEach(f => console.log(chalk.green(`   ✓ ${f}`)));
+      }
+
+      if (result.errors.length > 0) {
+        console.log(chalk.red(`\n❌ Грешки: ${result.errors.length}`));
+        result.errors.forEach(e => console.log(chalk.red(`   ✗ ${e}`)));
+      }
+
     } else {
       console.log(chalk.red(`❌ Неизвестно действие: ${action}`));
-      console.log(chalk.gray('   Налични: list, check, archive'));
+      console.log(chalk.gray('   Налични: list, check, process, archive'));
     }
   });
 
