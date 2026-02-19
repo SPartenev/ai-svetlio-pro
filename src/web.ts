@@ -1,8 +1,9 @@
 /**
- * AI_Svetlio — Web Viewer
+ * AI_Svetlio PRO — Web Viewer
  *
  * Локален HTTP сървър за read-only преглед на .memory/ файлове.
  * Без external зависимости — използва вградения http модул на Node.js.
+ * Включва sync status информация.
  */
 
 import * as http from 'http';
@@ -112,6 +113,38 @@ export class WebViewer {
     }
 
     return files;
+  }
+
+  /** Прочети sync status от hub-config.json */
+  async readSyncStatus(): Promise<any> {
+    try {
+      const homeDir = process.env.HOME || process.env.USERPROFILE || '~';
+      const configPath = path.join(homeDir, '.ai-svetlio', 'hub-config.json');
+
+      if (!await fs.pathExists(configPath)) {
+        return { configured: false };
+      }
+
+      const config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
+      const projectName = path.basename(this.projectDir);
+      const projectConfig = config.projects?.[projectName];
+
+      return {
+        configured: true,
+        hubRepo: config.hubRepo || 'unknown',
+        autoSync: config.autoSync || false,
+        lastHubUpdate: config.lastHubUpdate || null,
+        project: projectConfig ? {
+          name: projectName,
+          hubFolder: projectConfig.hubFolder,
+          lastPush: projectConfig.lastPush || null,
+          lastPull: projectConfig.lastPull || null,
+        } : null,
+        totalProjects: Object.keys(config.projects || {}).length,
+      };
+    } catch {
+      return { configured: false, error: true };
+    }
   }
 
   private escapeHtml(text: string): string {
@@ -506,6 +539,10 @@ tr:nth-child(even) td { background: var(--bg-card); }
     <span class="status">LIVE</span>
   </div>
   <nav class="nav" id="nav"></nav>
+  <div id="sync-status" class="sync-status" style="padding: 8px 16px; font-size: 11px; color: var(--text-dim); border-top: 1px solid var(--border); display: none;">
+    <div style="font-weight: 600; margin-bottom: 4px;">🔄 Hub Sync</div>
+    <div id="sync-info"></div>
+  </div>
   <div class="sidebar-footer">
     <span class="refresh-dot"></span> Auto-refresh: 5s
   </div>
@@ -581,6 +618,25 @@ function switchSection(type, idx) {
 
 buildNav();
 
+// Initial sync status load
+(async () => {
+  try {
+    const syncRes = await fetch('/api/sync');
+    if (syncRes.ok) {
+      const syncData = await syncRes.json();
+      const syncEl = document.getElementById('sync-status');
+      const syncInfo = document.getElementById('sync-info');
+      if (syncEl && syncInfo && syncData.configured) {
+        syncEl.style.display = 'block';
+        const autoLabel = syncData.autoSync ? '<span style="color:#4ade80">ON</span>' : '<span style="color:#fbbf24">OFF</span>';
+        const lastPush = syncData.project?.lastPush ? new Date(syncData.project.lastPush).toLocaleString('bg-BG') : 'никога';
+        const lastPull = syncData.project?.lastPull ? new Date(syncData.project.lastPull).toLocaleString('bg-BG') : 'никога';
+        syncInfo.innerHTML = 'Auto: ' + autoLabel + '<br>Push: ' + lastPush + '<br>Pull: ' + lastPull + '<br>Проекти: ' + syncData.totalProjects;
+      }
+    }
+  } catch {}
+})();
+
 // Auto-refresh
 setInterval(async () => {
   try {
@@ -600,6 +656,23 @@ setInterval(async () => {
           const section = document.getElementById('req-section-' + i);
           if (section) section.innerHTML = file.html;
         });
+      }
+    }
+
+    // Sync status
+    const syncRes = await fetch('/api/sync');
+    if (syncRes.ok) {
+      const syncData = await syncRes.json();
+      const syncEl = document.getElementById('sync-status');
+      const syncInfo = document.getElementById('sync-info');
+      if (syncEl && syncInfo && syncData.configured) {
+        syncEl.style.display = 'block';
+        const autoLabel = syncData.autoSync ? '<span style="color:#4ade80">ON</span>' : '<span style="color:#fbbf24">OFF</span>';
+        const lastPush = syncData.project?.lastPush ? new Date(syncData.project.lastPush).toLocaleString('bg-BG') : 'никога';
+        const lastPull = syncData.project?.lastPull ? new Date(syncData.project.lastPull).toLocaleString('bg-BG') : 'никога';
+        syncInfo.innerHTML = 'Auto: ' + autoLabel + '<br>Push: ' + lastPush + '<br>Pull: ' + lastPull + '<br>Проекти: ' + syncData.totalProjects;
+      } else if (syncEl) {
+        syncEl.style.display = 'none';
       }
     }
   } catch {}
@@ -648,6 +721,13 @@ setInterval(async () => {
           }));
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify(data));
+          return;
+        }
+
+        if (req.url === '/api/sync') {
+          const syncData = await this.readSyncStatus();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify(syncData));
           return;
         }
 

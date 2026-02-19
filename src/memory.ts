@@ -1,20 +1,73 @@
 /**
- * AI_Svetlio - Memory Module
+ * AI_Svetlio PRO - Memory Module
  *
  * Управлява .memory/ папката и всички файлове в нея.
+ * Поддържа auto-sync към hub (ако е настроен).
  */
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 
+/** Файлове които се синхронизират автоматично */
+const SYNCABLE_FILES = [
+  'STATE.md', 'LOG.md', 'ARCHITECTURE.md', 'TOOLS.md',
+  'TODO.md', 'DECISIONS.md', 'PROBLEMS.md', 'MODE.md',
+];
+
+/** Debounce интервал за auto-sync (30 секунди) */
+const AUTO_SYNC_DEBOUNCE_MS = 30000;
+
 export class Memory {
   private projectDir: string;
   private memoryDir: string;
-  
+
+  // Auto-sync state
+  private syncManager: any = null;  // Lazy-loaded SyncManager (avoid circular deps)
+  private autoSyncEnabled: boolean = false;
+  private lastAutoSyncTime: number = 0;
+
   constructor(projectDir: string) {
     this.projectDir = projectDir;
     this.memoryDir = path.join(projectDir, '.memory');
+  }
+
+  /**
+   * Инициализирай auto-sync (извиква се веднъж при старт).
+   * Проверява дали hub-config.json съществува и autoSync е включен.
+   */
+  async initAutoSync(): Promise<void> {
+    try {
+      const { SyncManager } = await import('./sync');
+      this.syncManager = new SyncManager(this.projectDir);
+      const config = await this.syncManager.loadConfig();
+      if (config && config.autoSync) {
+        this.autoSyncEnabled = true;
+      }
+    } catch {
+      // Sync не е наличен или конфигуриран — тихо пропускане
+      this.autoSyncEnabled = false;
+    }
+  }
+
+  /**
+   * Провери дали трябва да се задейства auto-sync (debounce).
+   */
+  private shouldAutoSync(): boolean {
+    if (!this.autoSyncEnabled || !this.syncManager) return false;
+    const now = Date.now();
+    if (now - this.lastAutoSyncTime < AUTO_SYNC_DEBOUNCE_MS) return false;
+    this.lastAutoSyncTime = now;
+    return true;
+  }
+
+  /**
+   * Задейства auto-sync push ако е нужно (non-blocking, fire-and-forget).
+   */
+  private triggerAutoSync(filename: string): void {
+    if (SYNCABLE_FILES.includes(filename) && this.shouldAutoSync()) {
+      this.syncManager.triggerAutoSyncPush().catch(() => {});
+    }
   }
   
   // ==========================================================================
@@ -223,11 +276,13 @@ ${projectName}/
   async writeFile(filename: string, content: string): Promise<void> {
     const filePath = path.join(this.memoryDir, filename);
     await fs.writeFile(filePath, content);
+    this.triggerAutoSync(filename);
   }
-  
+
   async appendToFile(filename: string, content: string): Promise<void> {
     const filePath = path.join(this.memoryDir, filename);
     await fs.appendFile(filePath, content);
+    this.triggerAutoSync(filename);
   }
   
   // ==========================================================================

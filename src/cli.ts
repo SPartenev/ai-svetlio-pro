@@ -7,7 +7,7 @@
  *  ███████║ ╚████╔╝ ███████╗   ██║   ███████╗██║╚██████╔╝
  *  ╚══════╝  ╚═══╝  ╚══════╝   ╚═╝   ╚══════╝╚═╝ ╚═════╝
  *
- * AI_Svetlio - Universal AI Agent Toolkit & Project Memory
+ * AI_Svetlio PRO - Universal AI Agent Toolkit with Hub Sync
  * 
  * Режими:
  *   NORMAL      - Текуща работа
@@ -27,8 +27,9 @@ import { Tools } from './tools';
 import { MCPWizard } from './mcp-wizard';
 import { WebViewer } from './web';
 import { RequestsManager } from './requests';
+import { SyncManager } from './sync';
 
-const VERSION = '1.5.7';
+const VERSION = '1.0.0';
 
 // ============================================================================
 // BANNER
@@ -43,7 +44,7 @@ function showBanner() {
   ███████║ ╚████╔╝ ███████╗   ██║   ███████╗██║╚██████╔╝
   ╚══════╝  ╚═══╝  ╚══════╝   ╚═╝   ╚══════╝╚═╝ ╚═════╝
   `));
-  console.log(chalk.gray(`  Universal AI Agent Toolkit & Project Memory v${VERSION}\n`));
+  console.log(chalk.gray(`  AI_Svetlio PRO — Toolkit + Hub Sync v${VERSION}\n`));
 }
 
 // ============================================================================
@@ -53,8 +54,8 @@ function showBanner() {
 const program = new Command();
 
 program
-  .name('svetlio')
-  .description('AI_Svetlio - Universal AI Agent Toolkit & Project Memory')
+  .name('svetlio-pro')
+  .description('AI_Svetlio PRO - Universal AI Agent Toolkit with Hub Sync')
   .version(VERSION);
 
 // ----------------------------------------------------------------------------
@@ -643,6 +644,116 @@ program
   });
 
 // ----------------------------------------------------------------------------
+// svetlio-pro sync - Синхронизация на .memory/ между машини
+// ----------------------------------------------------------------------------
+const syncCommand = program
+  .command('sync')
+  .alias('синк')
+  .description('Синхронизация на .memory/ между машини чрез GitHub hub');
+
+// svetlio-pro sync (без подкоманда) → покажи статус
+syncCommand
+  .action(async () => {
+    showBanner();
+    const sync = new SyncManager(process.cwd());
+    await sync.status();
+  });
+
+// svetlio-pro sync init
+syncCommand
+  .command('init')
+  .alias('настройка')
+  .description('Настрой sync hub (първоначална конфигурация)')
+  .action(async () => {
+    showBanner();
+    const sync = new SyncManager(process.cwd());
+    await sync.initHub();
+  });
+
+// svetlio-pro sync push
+syncCommand
+  .command('push')
+  .alias('изпрати')
+  .description('Изпрати .memory/ към hub')
+  .action(async () => {
+    showBanner();
+    const sync = new SyncManager(process.cwd());
+    const memory = new Memory(process.cwd());
+
+    if (!await memory.exists()) {
+      console.log(chalk.red('❌ Проектът не е инициализиран. Стартирай: svetlio-pro init'));
+      return;
+    }
+
+    console.log(chalk.yellow('\n🔄 Sync Push\n'));
+    const result = await sync.push();
+    if (result.success) {
+      if (result.filesChanged.length > 0) {
+        console.log(chalk.green(`\n✅ Push завършен: ${result.filesChanged.length} файла изпратени.`));
+      } else {
+        console.log(chalk.green('\n✅ Всичко е актуално, няма промени.'));
+      }
+    } else {
+      console.log(chalk.red(`\n❌ ${result.message}`));
+    }
+  });
+
+// svetlio-pro sync pull
+syncCommand
+  .command('pull')
+  .alias('изтегли')
+  .description('Изтегли .memory/ от hub')
+  .action(async () => {
+    showBanner();
+    const sync = new SyncManager(process.cwd());
+
+    console.log(chalk.yellow('\n🔄 Sync Pull\n'));
+    const result = await sync.pull();
+    if (result.success) {
+      if (result.filesChanged.length > 0) {
+        console.log(chalk.green(`\n✅ Pull завършен: ${result.filesChanged.length} файла обновени.`));
+      } else {
+        console.log(chalk.green('\n✅ Всичко е актуално, няма промени.'));
+      }
+    } else {
+      console.log(chalk.red(`\n❌ ${result.message}`));
+    }
+  });
+
+// svetlio-pro sync status
+syncCommand
+  .command('status')
+  .alias('статус')
+  .description('Покажи състоянието на синхронизацията')
+  .action(async () => {
+    showBanner();
+    const sync = new SyncManager(process.cwd());
+    await sync.status();
+  });
+
+// svetlio-pro sync auto
+syncCommand
+  .command('auto')
+  .alias('авто')
+  .description('Включи/изключи автоматична синхронизация')
+  .action(async () => {
+    showBanner();
+    const sync = new SyncManager(process.cwd());
+    await sync.toggleAutoSync();
+  });
+
+// svetlio-pro sync remove
+syncCommand
+  .command('remove')
+  .alias('премахни')
+  .description('Премахни проект от hub конфигурацията')
+  .action(async () => {
+    showBanner();
+    const sync = new SyncManager(process.cwd());
+    await sync.removeProject();
+  });
+
+// ----------------------------------------------------------------------------
 // Интерактивен режим (без команда)
 // ----------------------------------------------------------------------------
 program
@@ -662,6 +773,7 @@ program
         { name: '🌐 Web Viewer (web)', value: 'web' },
         { name: '⬆️  Обнови правилата (upgrade)', value: 'upgrade' },
         { name: '📋 Клиентски заявки (requests)', value: 'requests' },
+        { name: '🔄 Hub Sync (sync)', value: 'sync' },
         { name: '📝 Добави запис в лога (log)', value: 'log-prompt' },
         new inquirer.Separator('─── Инструменти ───'),
         { name: '🛠️  Каталог инструменти (tools)', value: 'tools' },
@@ -687,7 +799,7 @@ program
         message: 'Запис в лога:',
       }]);
       if (message.trim()) {
-        await program.parseAsync(['node', 'svetlio', 'log', message]);
+        await program.parseAsync(['node', 'svetlio-pro', 'log', message]);
       }
       return;
     }
@@ -706,7 +818,7 @@ program
     }
 
     // Изпълни избраната команда
-    await program.parseAsync(['node', 'svetlio', action]);
+    await program.parseAsync(['node', 'svetlio-pro', action]);
   });
 
 // ============================================================================
@@ -714,8 +826,8 @@ program
 // ============================================================================
 
 function generateGlobalRules(ide: string): string {
-  return `<!-- AI_Svetlio v${VERSION} -->
-# AI_Svetlio - Глобални правила за ${ide}
+  return `<!-- AI_Svetlio PRO v${VERSION} -->
+# AI_Svetlio PRO - Глобални правила за ${ide}
 
 ## 🧠 Система за памет
 
@@ -778,6 +890,12 @@ function generateGlobalRules(ide: string): string {
 | "внимавай" | REPAIR режим |
 | "backup първо" | Задължителен backup |
 
+### 🔄 SYNC (ако е настроен)
+Ако проектът ползва \`svetlio-pro sync\`:
+- При "продължаваме" → \`svetlio-pro sync pull\` (вземи последната памет)
+- При край на сесия → \`svetlio-pro sync push\` (изпрати промените)
+- \`svetlio-pro sync status\` → покажи състояние на синхронизацията
+
 ## ⚠️ Споделена отговорност
 
 Паметта е споделена отговорност между потребителя и AI агента.
@@ -786,13 +904,13 @@ function generateGlobalRules(ide: string): string {
 
 ## 🛠️ Инструменти
 
-Използвай \`svetlio tools\` за пълен списък.
+Използвай \`svetlio-pro tools\` за пълен списък.
 `;
 }
 
 async function createProjectRules(projectDir: string): Promise<void> {
-  const rulesContent = `<!-- AI_Svetlio v${VERSION} -->
-# AI_Svetlio - Правила за този проект
+  const rulesContent = `<!-- AI_Svetlio PRO v${VERSION} -->
+# AI_Svetlio PRO - Правила за този проект
 
 ## 🧠 Памет на проекта
 
@@ -882,6 +1000,12 @@ async function createProjectRules(projectDir: string): Promise<void> {
 | "внимавай" / "важно е" | REPAIR режим |
 | "backup първо" | Задължителен backup |
 | "обясни плана" | Покажи стъпките преди да започнеш |
+
+### 🔄 SYNC (ако е настроен)
+Ако проектът ползва \`svetlio-pro sync\`:
+- При "продължаваме" → \`svetlio-pro sync pull\` (вземи последната памет)
+- При край на сесия → \`svetlio-pro sync push\` (изпрати промените)
+- \`svetlio-pro sync status\` → покажи състояние на синхронизацията
 
 ## ⚠️ Споделена отговорност
 

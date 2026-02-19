@@ -1,11 +1,11 @@
 {
-  "name": "ai-svetlio",
-  "version": "1.5.7",
-  "description": "Universal AI Agent Toolkit & Project Memory - Инструменти, памет и режими за AI-assisted разработка",
+  "name": "ai-svetlio-pro",
+  "version": "1.0.0",
+  "description": "AI_Svetlio Pro - Universal AI Agent Toolkit with Hub Sync for cross-machine memory synchronization",
   "main": "dist/cli.js",
   "bin": {
-    "svetlio": "dist/cli.js",
-    "ai-svetlio": "dist/cli.js"
+    "svetlio-pro": "dist/cli.js",
+    "spro": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,7 +22,10 @@
     "mcp",
     "toolkit",
     "memory",
-    "project-management"
+    "project-management",
+    "sync",
+    "hub",
+    "cross-machine"
   ],
   "author": "AI_Svetlio",
   "license": "MIT",
@@ -47,10 +50,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SPartenev/Ai-Svetlio.git"
+    "url": "git+https://github.com/SPartenev/ai-svetlio-pro.git"
   },
   "bugs": {
-    "url": "https://github.com/SPartenev/Ai-Svetlio/issues"
+    "url": "https://github.com/SPartenev/ai-svetlio-pro/issues"
   },
-  "homepage": "https://github.com/SPartenev/Ai-Svetlio#readme"
+  "homepage": "https://github.com/SPartenev/ai-svetlio-pro#readme"
 }
